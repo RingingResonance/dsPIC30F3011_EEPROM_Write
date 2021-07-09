@@ -1,0 +1,26 @@
+/** Write a Byte to EEPROM **/
+int eeprom_write(int addrs, int data){
+    int adrfinal = 0;
+    if (addrs > 0x1FF){
+        return 1;       //error writing, address out of range.
+    }
+    else{
+        adrfinal = addrs * 2;
+        adrfinal += 0xFC00;
+        //Write to location.
+        //DO NOT TOUCH THIS, EVERYTHING MUST BE DONE IN THIS EXACT ORDER OR IT WILL NOT WORK PROPERLY!!!
+        WREG1 = 0x7F;     //ADDRESS UPPER
+        __asm__ ("MOV W1,TBLPAG");
+        WREG2 = data; //data pattern.
+        WREG0 = adrfinal;   //ADDRESS LOWER
+        //ESPECIALLY DON'T TOUCH THE ORDER THAT THE WREGs GET WRITTEN TO.
+        __asm__ ("TBLWTL w2,[w0]");
+        NVMCON = 0x4004;
+        NVMKEY = 0x55;
+        NVMKEY = 0xAA;
+        __asm__ ("NOP");
+        __asm__ ("NOP");
+        NVMCONbits.WR = 1;
+        return 0;
+    }
+}
